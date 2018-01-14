@@ -11,7 +11,7 @@ CREATE TABLE namespace (
 CREATE TABLE page (
        id        INT NOT NULL AUTO_INCREMENT,
        namespace INT,
-       name      VARCHAR(60),
+       name      VARCHAR(1024),
        updtm     TIMESTAMP,
        fetchtm   TIMESTAMP,
        PRIMARY KEY (id,namespace,name),
@@ -20,8 +20,8 @@ CREATE TABLE page (
 
 CREATE TABLE person (
        pageid  INT,
-       surname VARCHAR(50),
-       given   VARCHAR(50),
+       surname VARCHAR(256),
+       given   VARCHAR(256),
        parentfamily INT,               
        text    TEXT,
        FOREIGN KEY (pageid) REFERENCES page(id)

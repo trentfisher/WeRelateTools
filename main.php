@@ -16,11 +16,8 @@ if (isset($_GET["action"]))
     }
     if ($_GET["action"] == "crawl")
     {
-        $max = (isset($_GET["count"]) ? $_GET["count"] : "10");
-        while ($max--)
-        {
-            $db->fetchnext();
-        }
+        $max = (isset($_GET["count"]) ? $_GET["count"] : 1);
+        $db->fetchnext($max);
     }
 }
 else
@@ -39,4 +36,9 @@ else
 <?php
 $db->stats();
 }
+
+$p = new Person("Person:Wilford Way (1)");
+print("person = <pre>".htmlspecialchars(print_r($p, true))."</pre>");
+$p->traverse_anc();
+
 ?>

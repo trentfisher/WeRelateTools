@@ -104,23 +104,53 @@ Class DB
         return "https://www.werelate.org/wiki/".$ns.":".$name."?action=raw";
     }
 
+    function splitfacts($stuff)
+    {
+        // Pick out the leading XML
+        preg_match("((?is)^\s*<(\w+)>(.+)</\\1>(.*))",
+                   $stuff, $match);
+        print("match = <pre>".htmlspecialchars(print_r($match, true))."</pre>");
+
+        $facts = sprintf("<%s>%s</%s>", $match[1], $match[2], $match[1]);
+
+        // clean up the remaining text
+        $text = $match[3];
+        preg_replace("(<show_sources_images_notes/>)", "", $text);
+        preg_replace("((?s)[ \t\r\n]+$)", "", $text);
+        preg_replace("((?s)^[ \t\r\n]+)", "", $text);
+
+        return array($facts, $text);
+    }
+
     // fetch the contents of the given page and create db entries
     function fetch($ns, $name)
     {
         print "<br>TBD fetch $ns:$name\n";
         $stuff = file_get_contents($this->name2url($ns, $name));
-        print "<pre>".$stuff."</pre>\n";
+        print "fetch got: <pre>".htmlspecialchars($stuff)."</pre>\n";
+        list($facts, $text) = $this->splitfacts($stuff);
+        $factsxml = simplexml_load_string("<wr>".$facts."<text>".$text."</text></wr>");
+        print "parsed facts: <pre>".htmlspecialchars(print_r($factsxml, true))."</pre>\n";
+        if ($ns == "Person")
+        {
+            print "adding person ".$factsxml->person->name->attributes()->given." ".$factsxml->person->name->attributes()->surname;
+        }
+        // mark as loaded
+        // UPDATE page fetchtm = NOW() where namespace = :ns and name = :name
     }
 
     function fetchnext($howmany = 1)
     {
+        print "fetching next $howmany rows<br/>\n";
         $stmt = $this->conn->prepare(
-            "SELECT namespace.name,page.name FROM page,namespace WHERE updtm > fetchtm AND page.namespace = namespace.id ORDER BY page.id LIMIT :howmany");
+            "SELECT namespace.name,page.name,page.id FROM page,namespace WHERE updtm > fetchtm AND page.namespace = namespace.id ORDER BY page.id LIMIT :howmany");
+        $howmany += 0; // force to be integer
         $stmt->bindParam(':howmany', $howmany, PDO::PARAM_INT);
         $stmt->execute();
         //foreach ($stmt as $row)
-        while ($row = $stmt->fetch())
+        while ($row = $stmt->fetch(PDO::FETCH_BOTH, PDO::FETCH_ORI_NEXT))
         {
+            if ($row[0] == "Special") continue;
             print_r($row);
             $this->fetch($row[0], $row[1]);
         }
