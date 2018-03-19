@@ -15,7 +15,7 @@ class Person extends Page
         print "new Person $fn -> $this->namespace $this->name\n<br/>";
 
         // fetch the page if needed
-        if (! $this->indb() || $force || $lastupd > $lastfetch)
+        if (! $this->indb() || $force || $this->lastupd > $this->lastfetch)
         {
             $this->fetch();
             $f = $this->factsxml;
@@ -36,7 +36,15 @@ class Person extends Page
     }
     function indb()
     {
+        self::$DB->prepare(
+            "SELECT * FROM person,page WHERE page.id = person.pageid AND page.name = :pagename:");
+
         return false;
+    }
+    function updatedb()
+    {
+        //parent to insert page
+        self::$DB->prepare("INSERT INTO person (pagename, surname, given) VALUES (:pagename)");
     }
     function child_of_family()
     {

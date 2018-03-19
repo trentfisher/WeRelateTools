@@ -1,5 +1,6 @@
 <?php
 $db = new DB();
+Page::$DB = $db->conn;
 
 date_default_timezone_set('America/New_York');
 
@@ -36,9 +37,11 @@ else
 <?php
 $db->stats();
 }
-
+print "\n";
+$p = new Page("Person:Wilford Way (1)");
+print "\n";
 $p = new Person("Person:Wilford Way (1)");
 print("person = <pre>".htmlspecialchars(print_r($p, true))."</pre>");
-$p->traverse_anc();
+//$p->traverse_anc();
 
 ?>
