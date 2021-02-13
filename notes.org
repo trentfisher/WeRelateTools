@@ -1,0 +1,27 @@
+* Log
+<2018-01-11 Thu>
+created github repos and did my first checkin
+<2018-01-12 Fri 06:00>
+work on splitting the raw output into parsable xml and the text
+
+* Notes
+** traversal
+   given url
+   $obj = $db->fetchobjfromurl();
+   $obj->traversedec()
+     foreach spousefam
+       foreach child
+         child->traversedec
+   $obj->traverseanc()
+     parents->husband->traverseanc()
+     parents->wife->traverseanc()
+   person
+     parents -> family
+     spousefam -> [ families ]
+   family
+     husband -> person
+     wife    -> person
+     children -> [person...]
+
+   new Person(name)
+     fetchurl("Person:$name")
