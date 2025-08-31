@@ -59,23 +59,26 @@ def getscore(root):
     #<source_citation id="S2" title="Source:Find A Grave" record_name="{{fgravemem|28164527|Henry Sylvester Davis}}"/>
     sources = {}
     for s in root.findall('source_citation'):
-        sources[s.get('id')] = s
         if (s.get('title').startswith('Source:')):
-            score = score + 3
+            sources[s.get('id')] = 3
         elif (s.get('title').startswith('MySource:')):
-            score = score + 2
+            sources[s.get('id')] = 2
         else:
-            score = score + 1
+            sources[s.get('id')] = 1
+        score = score + sources[s.get('id')]
              
     # go through each event_fact
     #<event_fact type="Death" date="15 Jul 1939" place="Noble, Ohio, United States" sources="S2"/>
     for e in root.findall('event_fact'):
-        if (e.find("sources")):
-            sources = re.split("[,\s]+", e.find("sources").text)
+        if (e.get("sources")):
+            refs = re.split("[,\s]+", e.get("sources"))
+            for s in refs:
+                score = score + sources[s]
 
     score = score + len(root.find("body").text)/256
+    # TBD count source refs <ref name="S1"/>
 
-    return score
+    return [score, 1]
         
 #------------------------------------------------------------------------
 def opendb():
@@ -107,8 +110,8 @@ def crawlrss():
                 except AttributeError:
                     print(f"Error: cannot find version id in {h['link']}")
                 print(f"        verid = {verid}")
-                raw = getscore(getraw(p['title'], verid))
-                addhist(db, p['title'], verid, h['pubDate'], h['creator'])
+                score = getscore(getraw(p['title'], verid))
+                addhist(db, p['title'], verid, h['pubDate'], h['creator'], score[0], score[1])
 
 def main():
     action = sys.argv[1]
@@ -116,7 +119,7 @@ def main():
         crawlrss()
     elif (action == "score"):
         score = getscore(getraw(sys.argv[2]))
-        print(score)
+        print(f"quality store: {score[0]} {score[1]}")
     else:
         print("Error: unknown action")
         
