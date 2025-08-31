@@ -3,11 +3,12 @@ CREATE TABLE page (
        PRIMARY KEY(name)
 );
 CREATE TABLE vers (
-       name TEXT,
-       id TEXT,
-       ts TIMESTAMP,
-       user TEXT,
-       score TEXT,
-       scorever TEXT,
+       name     TEXT,
+       id       TEXT,
+       ts       TIMESTAMP,
+       user     TEXT,
+       score    INTEGER,
+       scorever INTEGER,
+       newver   INTEGER,
        PRIMARY KEY (name, id)
 );

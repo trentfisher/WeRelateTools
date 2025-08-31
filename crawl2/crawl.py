@@ -11,8 +11,7 @@ import math
 
 dbfile="wr.db"
 werelateurl = "https://www.werelate.org"
-rssurl = werelateurl+"/wiki/Special:Recentchanges?feed=rss"
-#rssurl = werelateurl+"/wiki/Special:Recentchanges?feed=rss&limit=500&days=3"
+rssurl = werelateurl+"/wiki/Special:Recentchanges?feed=rss&limit=500&days=3"
 count = {'fetchrss':0, 'fetchraw':0}
 #------------------------------------------------------------------------
 def getrss(url):
@@ -53,7 +52,7 @@ def getraw(page, verid=None):
     response.raise_for_status()
     count['fetchraw'] += 1;
     txt = response.text
-    print(txt)
+    #print(txt)
 
     # reconstruct into valid xml
     txt = re.sub("\s*<show_sources_images_notes/>\s*", "", txt)
@@ -127,8 +126,9 @@ def getscore(root):
 #------------------------------------------------------------------------
 def opendb():
     return sqlite3.connect(dbfile)
-    
-def addhist(db, name, verid, ts, user, score, scorever):
+
+# add a page history entry to the database or update it if needed
+def addhist(db, name, verid, ts, user, score, scorever, newver):
     cursor = db.cursor()
     # normalize the timestamp to something sqlite can cope  with
     ts = parser.parse(ts).replace(tzinfo=timezone.utc).strftime('%Y-%m-%d %H:%M:%SZ')
@@ -145,8 +145,8 @@ def addhist(db, name, verid, ts, user, score, scorever):
                            (score, scorever, name, verid))
             db.commit()
     else:
-        cursor.execute('INSERT OR IGNORE INTO vers (name, id, ts, user, score, scorever) VALUES (?,?,?,?,?,?)',
-                       (name, verid, ts, user, score, scorever))
+        cursor.execute('INSERT OR IGNORE INTO vers (name, id, ts, user, score, scorever, newver) VALUES (?,?,?,?,?,?,?)',
+                       (name, verid, ts, user, score, scorever, newver))
         db.commit()
     
 #------------------------------------------------------------------------
@@ -165,11 +165,12 @@ def crawlrss():
                     verid = re.search("diff=(\d+)", h['link']).group(1)
                 except AttributeError:
                     print(f"Error: cannot find version id in {h['link']}")
-                print(f"        verid = {verid}")
+                print(f"        verid = {verid} {h['pubDate']} new {h == hist[-1]}")
                 # TBD optimization: get a list of revs in db, and only update missing ones
                 score = getscore(getraw(p['title'], verid))
                 if (score[1] > 0):
-                    addhist(db, p['title'], verid, h['pubDate'], h['creator'], score[0], score[1])
+                    addhist(db, p['title'], verid, h['pubDate'], h['creator'],
+                            score[0], score[1], int(h==hist[-1]))
 
 def updatescore():
     db = opendb()
@@ -180,7 +181,7 @@ def updatescore():
         score = getscore(getraw(row[0], row[1]))
         print(f"need to update score for {row[0]} ver {row[2]} was {row[4]} now {score[0]}")
         newrow = (row[0], row[1], row[2], row[3], score[0], score[1])
-        addhist(db, row[0], row[1], row[2], row[3], score[0], score[1])
+        addhist(db, row[0], row[1], row[2], row[3], score[0], score[1], 0)
     
 def main():
     action = sys.argv[1]
