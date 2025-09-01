@@ -8,6 +8,7 @@ from dateutil import parser
 from datetime import datetime,timedelta,timezone
 import sys
 import math
+import time
 
 dbfile="wr.db"
 werelateurl = "https://www.werelate.org"
@@ -50,6 +51,7 @@ def getraw(page, verid=None):
 
     response = requests.get(url)
     response.raise_for_status()
+    time.sleep(2)
     count['fetchraw'] += 1;
     txt = response.text
     #print(txt)
@@ -148,6 +150,14 @@ def addhist(db, name, verid, ts, user, score, scorever, newver):
         cursor.execute('INSERT OR IGNORE INTO vers (name, id, ts, user, score, scorever, newver) VALUES (?,?,?,?,?,?,?)',
                        (name, verid, ts, user, score, scorever, newver))
         db.commit()
+
+def gethist(db, name):
+    cursor = db.cursor()
+    cursor.execute('SELECT id FROM vers WHERE name = ? ORDER BY ts', [name])
+    verlist = []
+    for row in cursor:
+        verlist.append(row[0])
+    return verlist
     
 #------------------------------------------------------------------------
 def crawlrss():
@@ -156,22 +166,67 @@ def crawlrss():
     for p in pgs:
         print(p)
         if (re.search('^(Person|Family):', p['title'])):
-            hist = getrss(f"{werelateurl}/w/index.php?title={p['title']}&action=history&feed=rss")
-            for h in hist:
-                print("    ", end="")
-                print(h)
-                verid = None
-                try:
-                    verid = re.search("diff=(\d+)", h['link']).group(1)
-                except AttributeError:
-                    print(f"Error: cannot find version id in {h['link']}")
-                print(f"        verid = {verid} {h['pubDate']} new {h == hist[-1]}")
-                # TBD optimization: get a list of revs in db, and only update missing ones
-                score = getscore(getraw(p['title'], verid))
-                if (score[1] > 0):
-                    addhist(db, p['title'], verid, h['pubDate'], h['creator'],
-                            score[0], score[1], int(h==hist[-1]))
+            addpagehist(db, p['title'])
+            
+def addpagehist(db, name):
+    hist = getrss(f"{werelateurl}/w/index.php?title={name}&action=history&feed=rss")
+    for h in hist:
+        print("    ", end="")
+        print(h)
+        verid = None
+        try:
+            verid = re.search("diff=(\d+)", h['link']).group(1)
+        except AttributeError:
+            print(f"Error: cannot find version id in {h['link']}")
+        print(f"        verid = {verid} {h['pubDate']} new {h == hist[-1]}")
 
+        # optimization: get a list of revs in db, and only update missing ones
+        verlist = gethist(db, name)
+        verdict = dict.fromkeys(verlist, 1)
+        if (verid in verdict):
+            print(f"skipping version {verid} as it is already in db")
+            continue
+
+        score = getscore(getraw(name, verid))
+        if (score[1] > 0):
+            addhist(db, name, verid, h['pubDate'], h['creator'],
+                    score[0], score[1], int(h==hist[-1]))
+
+def crawltree(name):
+    db = opendb()
+    connections = [name]
+    visited = {}
+    while connections:
+        p = connections.pop()
+        if (p in visited):
+            continue
+        visited[p] = True
+        print(f"traversing {p}")
+        rec = getraw(p)
+
+        if (not rec):
+            continue
+
+        # if already in the db, skip this one
+        #verlist = gethist(db, p)
+        #if (verlist):
+        #    continue
+        
+        addpagehist(db, p)
+        
+        for f in rec.findall("child_of_family"):
+            connections.append("Family:"+f.get('title'))
+        for f in rec.findall("spouse_of_family"):
+            connections.append("Family:"+f.get('title'))
+
+        for f in rec.findall("husband"):
+            connections.append("Person:"+f.get('title'))
+        for f in rec.findall("wife"):
+            connections.append("Person:"+f.get('title'))
+        for f in rec.findall("child"):
+            connections.append("Person:"+f.get('title'))
+        
+    
 def updatescore():
     db = opendb()
     cursor = db.cursor()
@@ -190,11 +245,16 @@ def main():
     elif (action == "score"):
         score = getscore(getraw(sys.argv[2]))
         print(f"quality store: {score[0]} {score[1]}")
+    elif (action == "crawltree"):
+        for p in sys.argv[2:]:
+            crawltree(p)
     elif (action == "updatescore"):
         updatescore()
     else:
         print("Error: unknown action")
-        
+
+    print(f"Counts:  fetchrss {count['fetchrss']} fetchraw {count['fetchraw']}")
+    
 #------------------------------------------------------------------------
 if __name__ == "__main__":
     main()
