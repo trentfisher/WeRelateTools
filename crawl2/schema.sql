@@ -1,5 +1,10 @@
-CREATE TABLE page (
-       name TEXT,
+CREATE TABLE relations (
+       name             TEXT,
+       child_of_family  TEXT,
+       spouse_of_family TEXT,
+       husband          TEXT,
+       wife             TEXT,
+       child            TEXT,
        PRIMARY KEY(name)
 );
 CREATE TABLE vers (

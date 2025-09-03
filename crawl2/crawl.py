@@ -14,6 +14,7 @@ dbfile="wr.db"
 werelateurl = "https://www.werelate.org"
 rssurl = werelateurl+"/wiki/Special:Recentchanges?feed=rss&limit=500&days=3"
 count = {'fetchrss':0, 'fetchraw':0}
+
 #------------------------------------------------------------------------
 def getrss(url):
      
@@ -158,6 +159,34 @@ def gethist(db, name):
     for row in cursor:
         verlist.append(row[0])
     return verlist
+
+def addrelations(db, name, rels):
+    cursor = db.cursor()
+    cursor.execute('INSERT OR IGNORE INTO relations (name, child_of_family, spouse_of_family, husband, wife, child) VALUES (?,?,?,?,?,?)',
+                   [name,
+                    "|".join(rels["child_of_family"]),
+                    "|".join(rels["spouse_of_family"]),
+                    "|".join(rels["husband"]),
+                    "|".join(rels["wife"]),
+                    "|".join(rels["child"])])
+    db.commit()
+    
+def getrelations(db, name):
+    cursor = db.cursor()
+    cursor.execute('SELECT * FROM relations WHERE name = ?', [name])
+    row = cursor.fetchone()
+    if (not row):
+        return None
+    rels = {
+        "child_of_family":  row[1].split('|') if row[1] else None,
+        "spouse_of_family": row[2].split('|') if row[2] else None,
+        "husband":          row[3].split('|') if row[3] else None,
+        "wife":             row[4].split('|') if row[4] else None,
+        "child":            row[5].split('|') if row[5] else None,
+        }
+    return rels
+    
+    
     
 #------------------------------------------------------------------------
 def crawlrss():
@@ -197,34 +226,34 @@ def crawltree(name):
     connections = [name]
     visited = {}
     while connections:
-        p = connections.pop()
-        if (p in visited):
+        name = connections.pop(0)
+        if (name in visited):
             continue
-        visited[p] = True
-        print(f"traversing {p}")
-        rec = getraw(p)
+        visited[name] = True
+        print(f"traversing {name}")
 
-        if (not rec):
-            continue
+        # get the relations either from DB or xml
+        relations = getrelations(db, name)
+        if (not relations):
+            rec = getraw(name)
+            if (not rec):
+                continue
+            relations = {}
+            relations["child_of_family"]  = ["Family:"+f.get('title') for f in rec.findall("child_of_family")]
+            relations["spouse_of_family"] = ["Family:"+f.get('title') for f in rec.findall("spouse_of_family")]
+            relations["husband"]          = ["Person:"+f.get('title') for f in rec.findall("husband")]
+            relations["wife"]             = ["Person:"+f.get('title') for f in rec.findall("wife")]
+            relations["child"]            = ["Person:"+f.get('title') for f in rec.findall("child")]
 
-        # if already in the db, skip this one
-        #verlist = gethist(db, p)
-        #if (verlist):
-        #    continue
-        
-        addpagehist(db, p)
-        
-        for f in rec.findall("child_of_family"):
-            connections.append("Family:"+f.get('title'))
-        for f in rec.findall("spouse_of_family"):
-            connections.append("Family:"+f.get('title'))
+            # now add it to the database
+            addrelations(db, name, relations)
+            addpagehist(db, name)
 
-        for f in rec.findall("husband"):
-            connections.append("Person:"+f.get('title'))
-        for f in rec.findall("wife"):
-            connections.append("Person:"+f.get('title'))
-        for f in rec.findall("child"):
-            connections.append("Person:"+f.get('title'))
+        # append all the relations on for the next iteration
+        for r in ("child_of_family", "spouse_of_family", "husband", "wife", "child"):
+            if (relations[r]):
+                connections.extend(relations[r])
+        print(f"connections = {connections}")
         
     
 def updatescore():
