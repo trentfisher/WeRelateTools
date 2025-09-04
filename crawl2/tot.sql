@@ -3,6 +3,7 @@
 SELECT 
     month,
     total_score,
+    sum_scoredif,
     count_users,
     count_pages,
     count_edits,
@@ -12,6 +13,7 @@ FROM (
     SELECT 
         STRFTIME('%Y-%m', ts) AS month,
         SUM(CAST(score AS INTEGER)) AS total_score,
+        SUM(CAST(scoredif AS INTEGER)) as sum_scoredif,
         COUNT(DISTINCT user) as count_users,
         COUNT(DISTINCT name) as count_pages,
         COUNT(*) as count_edits,

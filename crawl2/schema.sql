@@ -13,6 +13,7 @@ CREATE TABLE vers (
        ts       TIMESTAMP,
        user     TEXT,
        score    INTEGER,
+       scoredif INTEGER,
        scorever INTEGER,
        newver   INTEGER,
        PRIMARY KEY (name, id)

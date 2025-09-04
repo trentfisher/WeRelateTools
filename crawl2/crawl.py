@@ -9,10 +9,11 @@ from datetime import datetime,timedelta,timezone
 import sys
 import math
 import time
+import random
 
 dbfile="wr.db"
 werelateurl = "https://www.werelate.org"
-rssurl = werelateurl+"/wiki/Special:Recentchanges?feed=rss&limit=500&days=3"
+rssurl = werelateurl+"/wiki/Special:Recentchanges?feed=rss&limit=5000&days=7"
 count = {'fetchrss':0, 'fetchraw':0}
 
 #------------------------------------------------------------------------
@@ -52,7 +53,7 @@ def getraw(page, verid=None):
 
     response = requests.get(url)
     response.raise_for_status()
-    time.sleep(2)
+    #time.sleep(random.random()*2)
     count['fetchraw'] += 1;
     txt = response.text
     #print(txt)
@@ -157,7 +158,7 @@ def opendb():
     return sqlite3.connect(dbfile)
 
 # add a page history entry to the database or update it if needed
-def addhist(db, name, verid, ts, user, score, scorever, newver):
+def addhist(db, name, verid, ts, user, score, scoredif, scorever, newver):
     cursor = db.cursor()
     # normalize the timestamp to something sqlite can cope  with
     ts = parser.parse(ts).replace(tzinfo=timezone.utc).strftime('%Y-%m-%d %H:%M:%SZ')
@@ -170,12 +171,12 @@ def addhist(db, name, verid, ts, user, score, scorever, newver):
         # only update if the score has changed
         if (int(row[5]) < scorever):
             print(f"  update score from ver {row[5]} to {scorever}")
-            cursor.execute("UPDATE vers SET score = ?, scorever = ? WHERE  name = ? AND id = ?",
-                           (score, scorever, name, verid))
+            cursor.execute("UPDATE vers SET score = ?, scoredif=?, scorever = ? WHERE  name = ? AND id = ?",
+                           (score, scoredif, scorever, name, verid))
             db.commit()
     else:
-        cursor.execute('INSERT OR IGNORE INTO vers (name, id, ts, user, score, scorever, newver) VALUES (?,?,?,?,?,?,?)',
-                       (name, verid, ts, user, score, scorever, newver))
+        cursor.execute('INSERT OR IGNORE INTO vers (name, id, ts, user, score, scoredif, scorever, newver) VALUES (?,?,?,?,?,?,?,?)',
+                       (name, verid, ts, user, score, scoredif, scorever, newver))
         db.commit()
 
 def gethist(db, name):
@@ -222,17 +223,23 @@ def crawlrss():
         print(p)
         if (re.search('^(Person|Family):', p['title'])):
             addpagehist(db, p['title'])
-            
+
+# fetch the history for a given page and add it to the DB
 def addpagehist(db, name):
     hist = getrss(f"{werelateurl}/w/index.php?title={name}&action=history&feed=rss")
+    hist.reverse()
+    lastscore = 0
     for h in hist:
         print("    ", end="")
         print(h)
+
+        # pick out the version number from the link url
         verid = None
         try:
             verid = re.search("diff=(\d+)", h['link']).group(1)
         except AttributeError:
             print(f"Error: cannot find version id in {h['link']}")
+            raise
         print(f"        verid = {verid} {h['pubDate']} new {h == hist[-1]}")
 
         # optimization: get a list of revs in db, and only update missing ones
@@ -242,10 +249,22 @@ def addpagehist(db, name):
             print(f"skipping version {verid} as it is already in db")
             continue
 
-        score = getscore(getraw(name, verid))
+        # get the raw xml content for calculating the score
+        raw = getraw(name, verid)
+        score = getscore(raw)
+
+        # if it is the last record it is the latest, gather relations
+        if (h==hist[-1]):
+            relations = xml2relations(raw)
+            addrelations(db, name, relations)
+
         if (score[1] > 0):
+            print(f"     score diff {score[0] - lastscore}")
             addhist(db, name, verid, h['pubDate'], h['creator'],
-                    score[0], score[1], int(h==hist[-1]))
+                    score[0], (score[0] - lastscore), score[1], int(h==hist[0]))
+            lastscore = score[0]
+        else:
+            print("     no score on that one")
 
     # update the relations page as well
     relations = xml2relations(getraw(name))
@@ -306,7 +325,7 @@ def main():
     else:
         print("Error: unknown action")
 
-    print(f"Counts:  fetchrss {count['fetchrss']} fetchraw {count['fetchraw']}")
+    print(f"Counts:  {count}")
     
 #------------------------------------------------------------------------
 if __name__ == "__main__":
