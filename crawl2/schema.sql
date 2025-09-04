@@ -17,3 +17,4 @@ CREATE TABLE vers (
        newver   INTEGER,
        PRIMARY KEY (name, id)
 );
+

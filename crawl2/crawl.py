@@ -75,6 +75,26 @@ def getraw(page, verid=None):
     root.append(body)
     return root
 
+# given the parsed xml returned by getraw(), pick out the relations, and massage
+# them into lists with proper prefixes
+def xml2relations(rec):
+    relations = {
+        "child_of_family": [],
+        "spouse_of_family": [],
+        "husband": [],
+        "wife": [],
+        "child": [],
+        }
+    if (not rec):
+        return relations
+    
+    relations["child_of_family"]  = ["Family:"+f.get('title') for f in rec.findall("child_of_family")]
+    relations["spouse_of_family"] = ["Family:"+f.get('title') for f in rec.findall("spouse_of_family")]
+    relations["husband"]          = ["Person:"+f.get('title') for f in rec.findall("husband")]
+    relations["wife"]             = ["Person:"+f.get('title') for f in rec.findall("wife")]
+    relations["child"]            = ["Person:"+f.get('title') for f in rec.findall("child")]
+    return relations
+
 def getscore(root):
     score = 0
     scorever = 1  # increment this if the code below changes
@@ -101,6 +121,11 @@ def getscore(root):
         if (s.text and len(s.text) > 8):
             score = score + 1
             
+    # grab all the notes too... we store them as a source
+    for n in root.findall("note"):
+        if (len(n.text) > 8):
+            sources[n.get("id")] = 1
+        
     # notes get a score too
     for n in root.findall('note'):
         score = score + 1
@@ -114,7 +139,8 @@ def getscore(root):
         if (e.get("sources")):
             refs = re.split("[,\s]+", e.get("sources"))
             for s in refs:
-                score = score + sources[s]
+                if (s in sources):
+                    score = score + sources[s]
         if (e.get("notes")):
             refs = re.split("[,\s]+", e.get("notes"))
             for s in refs:
@@ -221,6 +247,11 @@ def addpagehist(db, name):
             addhist(db, name, verid, h['pubDate'], h['creator'],
                     score[0], score[1], int(h==hist[-1]))
 
+    # update the relations page as well
+    relations = xml2relations(getraw(name))
+    addrelations(db, name, relations)
+
+
 def crawltree(name):
     db = opendb()
     connections = [name]
@@ -235,15 +266,7 @@ def crawltree(name):
         # get the relations either from DB or xml
         relations = getrelations(db, name)
         if (not relations):
-            rec = getraw(name)
-            if (not rec):
-                continue
-            relations = {}
-            relations["child_of_family"]  = ["Family:"+f.get('title') for f in rec.findall("child_of_family")]
-            relations["spouse_of_family"] = ["Family:"+f.get('title') for f in rec.findall("spouse_of_family")]
-            relations["husband"]          = ["Person:"+f.get('title') for f in rec.findall("husband")]
-            relations["wife"]             = ["Person:"+f.get('title') for f in rec.findall("wife")]
-            relations["child"]            = ["Person:"+f.get('title') for f in rec.findall("child")]
+            relations = xml2relations(getraw(name))
 
             # now add it to the database
             addrelations(db, name, relations)
@@ -252,10 +275,11 @@ def crawltree(name):
         # append all the relations on for the next iteration
         for r in ("child_of_family", "spouse_of_family", "husband", "wife", "child"):
             if (relations[r]):
-                connections.extend(relations[r])
-        print(f"connections = {connections}")
+                for i in (relations[r]):
+                    if (not i in visited):
+                        connections.append(i)
+        print(f"connections pending {len(connections)}")
         
-    
 def updatescore():
     db = opendb()
     cursor = db.cursor()
