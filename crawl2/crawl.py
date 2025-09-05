@@ -13,13 +13,17 @@ import random
 
 dbfile="wr.db"
 werelateurl = "https://www.werelate.org"
-rssurl = werelateurl+"/wiki/Special:Recentchanges?feed=rss&limit=5000&days=7"
+rssurl = werelateurl+"/wiki/Special:Recentchanges?feed=rss&limit=5000&days=3"
 count = {'fetchrss':0, 'fetchraw':0}
+
+# set up a persistent connection
+wrsession = requests.Session()
+wrsession.headers.update({'Connection': 'keep-alive'})
 
 #------------------------------------------------------------------------
 def getrss(url):
      
-    response = requests.get(url)
+    response = wrsession.get(url)
     response.raise_for_status()
     count['fetchrss'] += 1;
     
@@ -51,7 +55,7 @@ def getraw(page, verid=None):
     else:
         url = f"{werelateurl}/w/index.php?title={page}&oldid={verid}&action=raw"
 
-    response = requests.get(url)
+    response = wrsession.get(url)
     response.raise_for_status()
     #time.sleep(random.random()*2)
     count['fetchraw'] += 1;
@@ -213,7 +217,21 @@ def getrelations(db, name):
         }
     return rels
     
+def renamepage(db, oldname, newname):
+    cursor = db.cursor()
+
+    # check if the rename already happened
+    cursor.execute('SELECT * FROM vers WHERE name = ?', [newname])
+    row = cursor.fetchone()
+    if (row):
+        return
     
+    cursor.execute("UPDATE vers SET name = ? WHERE  name = ?",
+                   (newname, oldname))
+    cursor.execute("UPDATE relations SET name = ? WHERE  name = ?",
+                   (newname, oldname))
+    db.commit()
+
     
 #------------------------------------------------------------------------
 def crawlrss():
@@ -223,16 +241,33 @@ def crawlrss():
         print(p)
         if (re.search('^(Person|Family):', p['title'])):
             addpagehist(db, p['title'])
+    print(f"RSS summary: {len(pgs)} entries from {pgs[-1]['pubDate']} to {pgs[0]['pubDate']}")
 
 # fetch the history for a given page and add it to the DB
 def addpagehist(db, name):
     hist = getrss(f"{werelateurl}/w/index.php?title={name}&action=history&feed=rss")
-    hist.reverse()
+    hist.reverse()   # oldest to newest
     lastscore = 0
+    raw = None
+    # optimization: get a list of revs in db, and only update missing ones
+    verlist = gethist(db, name)
+    verdict = dict.fromkeys(verlist, 1)
+
     for h in hist:
         print("    ", end="")
         print(h)
 
+        # check for renames
+        m = re.search("(Person|Family):(.+) renamed to (Person|Family):(.+):", h['title'])
+        if (m):
+            print(f"Rename {m.group(1)}:{m.group(2)} to {m.group(3)}:{m.group(4)}")
+            renamepage(db, m.group(1)+":"+m.group(2), m.group(3)+":"+m.group(4))
+            # the original page is now a redirect page... but we don't care about that
+            # but the version number we extract, below, is for that page
+            # but that version is unimportant, skip it
+            #name = m.group(3)+":"+m.group(4)
+            continue
+        
         # pick out the version number from the link url
         verid = None
         try:
@@ -240,11 +275,9 @@ def addpagehist(db, name):
         except AttributeError:
             print(f"Error: cannot find version id in {h['link']}")
             raise
-        print(f"        verid = {verid} {h['pubDate']} new {h == hist[-1]}")
+        print(f"        verid = {verid} {h['pubDate']} new {h == hist[0]}")
 
-        # optimization: get a list of revs in db, and only update missing ones
-        verlist = gethist(db, name)
-        verdict = dict.fromkeys(verlist, 1)
+        # skip if we already have it in the db
         if (verid in verdict):
             print(f"skipping version {verid} as it is already in db")
             continue
@@ -266,9 +299,10 @@ def addpagehist(db, name):
         else:
             print("     no score on that one")
 
-    # update the relations page as well
-    relations = xml2relations(getraw(name))
-    addrelations(db, name, relations)
+    # update the relations page as well, but only if we got something new
+    if (raw):
+        relations = xml2relations(raw)
+        addrelations(db, name, relations)
 
 
 def crawltree(name):

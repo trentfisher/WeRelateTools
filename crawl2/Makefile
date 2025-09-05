@@ -9,7 +9,12 @@ setup:
 initdb:
 	sqlite3 $(DB) < schema.sql
 
-dump.csv:
+reports: verdump.csv tot.csv user-all.csv user-month.csv
+verdump.csv:
 	(echo '.mode csv'; echo '.headers on'; echo 'select * from vers') | sqlite3 $(DB) > $@
 tot.csv: tot.sql
+	sqlite3 $(DB) > $@ < $<
+users.csv: users.sql
+	sqlite3 $(DB) > $@ < $<
+%.csv: %.sql
 	sqlite3 $(DB) > $@ < $<
