@@ -128,7 +128,7 @@ def getscore(root):
             
     # grab all the notes too... we store them as a source
     for n in root.findall("note"):
-        if (len(n.text) > 8):
+        if (n and len(n.text) > 8):
             sources[n.get("id")] = 1
         
     # notes get a score too
@@ -232,6 +232,12 @@ def renamepage(db, oldname, newname):
                    (newname, oldname))
     db.commit()
 
+def deletepage(db, name):
+    cursor = db.cursor()
+    cursor.execute('DELETE FROM vers WHERE name = ?', [name])
+    cursor.execute('DELETE FROM relations WHERE name = ?', [name])
+    db.commit()
+    
     
 #------------------------------------------------------------------------
 def crawlrss():
@@ -354,6 +360,15 @@ def main():
     elif (action == "crawltree"):
         for p in sys.argv[2:]:
             crawltree(p)
+    elif (action == "delete"):
+        db = opendb()
+        for p in sys.argv[2:]:
+            deletepage(db, p)
+    elif (action == "add"):
+        db = opendb()
+        for p in sys.argv[2:]:
+            addpagehist(db, p)
+    # only needed when the score schema changes
     elif (action == "updatescore"):
         updatescore()
     else:
