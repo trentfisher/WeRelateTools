@@ -1,0 +1,4 @@
+SELECT name
+FROM vers
+GROUP BY name
+HAVING SUM(CASE WHEN newver = 1 THEN 1 ELSE 0 END) = 0;
