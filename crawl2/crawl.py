@@ -10,11 +10,14 @@ import sys
 import math
 import time
 import random
+from bs4 import BeautifulSoup
 
 dbfile="wr.db"
 werelateurl = "https://www.werelate.org"
 rssurl = werelateurl+"/wiki/Special:Recentchanges?feed=rss&limit=5000&days=3"
-count = {'fetchrss':0, 'fetchraw':0}
+allpersonurl = werelateurl+"/w/index.php?title=Special%3AAllpages&from=&namespace=108"
+allfamilyurl = werelateurl+"/w/index.php?title=Special%3AAllpages&from=&namespace=110"
+count = {'fetchrss':0, 'fetchraw':0, 'fetchhist':0}
 
 # set up a persistent connection
 wrsession = requests.Session()
@@ -47,6 +50,37 @@ def getrss(url):
         pages.append({"title": title, "link": link, "pubDate": pubDate, "creator": creator})
     return pages
 
+# get the history for a given page
+def gethist(name):
+    url = f"https://www.werelate.org/w/index.php?title={name}&action=history&limit=50"
+    hist = []
+    while True:
+        print(f"fetching history page {url}")
+        response = wrsession.get(url)
+        response.raise_for_status()
+        count['fetchhist'] += 1;
+
+        soup = BeautifulSoup(response.content, 'html.parser')
+
+        pagehistorylist = soup.find("ul", id="pagehistory")
+        for histitem in pagehistorylist.find_all("li", recursive=False):
+            creator = histitem.find("span", class_="history-user").find('a').get('title')
+            histlink = histitem.find("a", string=re.compile("^\d\d:\d\d, \d"))
+            pubDate = histlink.string
+            title = histlink.get("title")
+            link = werelateurl+histlink.get("href")
+            print(f" history {title} {creator} {link} {pubDate}")
+            hist.append({"title": title, "link": link, "pubDate": pubDate, "creator": creator})
+
+        # look for link to next page
+        next_page_link = soup.find('a', string='next 50')
+        if (next_page_link):
+            url = 'https://www.werelate.org' + next_page_link.get('href')
+        else:
+            break
+    return hist
+
+    
 # get the raw xml from the page
 def getraw(page, verid=None):
     url = None
@@ -162,7 +196,7 @@ def opendb():
     return sqlite3.connect(dbfile)
 
 # add a page history entry to the database or update it if needed
-def addhist(db, name, verid, ts, user, score, scoredif, scorever, newver):
+def adddbhist(db, name, verid, ts, user, score, scoredif, scorever, newver):
     cursor = db.cursor()
     # normalize the timestamp to something sqlite can cope  with
     ts = parser.parse(ts).replace(tzinfo=timezone.utc).strftime('%Y-%m-%d %H:%M:%SZ')
@@ -183,7 +217,7 @@ def addhist(db, name, verid, ts, user, score, scoredif, scorever, newver):
                        (name, verid, ts, user, score, scoredif, scorever, newver))
         db.commit()
 
-def gethist(db, name):
+def getdbhist(db, name):
     cursor = db.cursor()
     cursor.execute('SELECT id FROM vers WHERE name = ? ORDER BY ts', [name])
     verlist = []
@@ -209,11 +243,11 @@ def getrelations(db, name):
     if (not row):
         return None
     rels = {
-        "child_of_family":  row[1].split('|') if row[1] else None,
-        "spouse_of_family": row[2].split('|') if row[2] else None,
-        "husband":          row[3].split('|') if row[3] else None,
-        "wife":             row[4].split('|') if row[4] else None,
-        "child":            row[5].split('|') if row[5] else None,
+        "child_of_family":  row[1].split('|') if row[1] else [],
+        "spouse_of_family": row[2].split('|') if row[2] else [],
+        "husband":          row[3].split('|') if row[3] else [],
+        "wife":             row[4].split('|') if row[4] else [],
+        "child":            row[5].split('|') if row[5] else [],
         }
     return rels
     
@@ -251,12 +285,12 @@ def crawlrss():
 
 # fetch the history for a given page and add it to the DB
 def addpagehist(db, name):
-    hist = getrss(f"{werelateurl}/w/index.php?title={name}&action=history&feed=rss")
+    hist = gethist(name)
     hist.reverse()   # oldest to newest
     lastscore = 0
     raw = None
     # optimization: get a list of revs in db, and only update missing ones
-    verlist = gethist(db, name)
+    verlist = getdbhist(db, name)
     verdict = dict.fromkeys(verlist, 1)
 
     for h in hist:
@@ -277,7 +311,7 @@ def addpagehist(db, name):
         # pick out the version number from the link url
         verid = None
         try:
-            verid = re.search("diff=(\d+)", h['link']).group(1)
+            verid = re.search("oldid=(\d+)", h['link']).group(1)
         except AttributeError:
             print(f"Error: cannot find version id in {h['link']}")
             raise
@@ -299,7 +333,7 @@ def addpagehist(db, name):
 
         if (score[1] > 0):
             print(f"     score diff {score[0] - lastscore}")
-            addhist(db, name, verid, h['pubDate'], h['creator'],
+            adddbhist(db, name, verid, h['pubDate'], h['creator'],
                     score[0], (score[0] - lastscore), score[1], int(h==hist[0]))
             lastscore = score[0]
         else:
@@ -337,8 +371,41 @@ def crawltree(name):
                 for i in (relations[r]):
                     if (not i in visited):
                         connections.append(i)
-        print(f"connections pending {len(connections)}")
-        
+        print(f"connections visited {len(visited)} pending {len(connections)}")
+
+def crawlall():
+    db = opendb()
+
+    for url in allpersonurl, allfamilyurl:
+        while True:
+            print(f"Loading {url}")
+            response = requests.get(url)
+            soup = BeautifulSoup(response.content, 'html.parser')
+
+            contentbox = soup.find("td", id="contentbox")
+            for link in contentbox.find_all("a", href=re.compile("/wiki/(Person|Family):")):
+                # skip redirects
+                if (link.find_parent(class_='allpagesredirect')):
+                    continue
+                name = link.get('title')
+                print(f"found link {name}")
+                # get the relations either from DB or xml
+                relations = getrelations(db, name)
+                if (not relations):
+                    relations = xml2relations(getraw(name))
+
+                # now add it to the database
+                addrelations(db, name, relations)
+                addpagehist(db, name)
+
+            # got all the links, on to the next page
+            next_page_link = soup.find('a', string=re.compile('^Next page '))
+            if next_page_link:
+                url = 'https://www.werelate.org' + next_page_link.get('href')
+            else:
+                break
+    
+# this is used when the scoring algorithm changes, need to go back and update the scores
 def updatescore():
     db = opendb()
     cursor = db.cursor()
@@ -348,18 +415,20 @@ def updatescore():
         score = getscore(getraw(row[0], row[1]))
         print(f"need to update score for {row[0]} ver {row[2]} was {row[4]} now {score[0]}")
         newrow = (row[0], row[1], row[2], row[3], score[0], score[1])
-        addhist(db, row[0], row[1], row[2], row[3], score[0], score[1], 0)
+        adddbhist(db, row[0], row[1], row[2], row[3], score[0], score[1], 0)
     
 def main():
     action = sys.argv[1]
     if (action == "crawlrss"):
         crawlrss()
-    elif (action == "score"):
-        score = getscore(getraw(sys.argv[2]))
-        print(f"quality store: {score[0]} {score[1]}")
     elif (action == "crawltree"):
         for p in sys.argv[2:]:
             crawltree(p)
+    elif (action == "crawlall"):
+        crawlall()
+    elif (action == "score"):
+        score = getscore(getraw(sys.argv[2]))
+        print(f"quality store: {score[0]} {score[1]}")
     elif (action == "delete"):
         db = opendb()
         for p in sys.argv[2:]:

@@ -4,8 +4,7 @@ DB=wr.db
 setup:
 	yum install -y sqlite
 	test -d venv && python3 -m venv venv
-	(. venv/bin/activate; pip install requests python-dateutil)
-
+	(. venv/bin/activate; pip install requests python-dateutil beautifulsoup4)
 initdb:
 	sqlite3 $(DB) < schema.sql
 
