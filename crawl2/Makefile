@@ -8,7 +8,10 @@ setup:
 initdb:
 	sqlite3 $(DB) < schema.sql
 
-reports: verdump.csv tot.csv tot-month.sql tot-monthly.sql user-all.csv user-month.csv verify-newver.sql
+progress:
+	echo 'select count(*) as c, (CAST(count(*) as REAL)/4377477*100) from relations' | sqlite3 $(DB)
+
+reports: verdump.csv tot.csv tot-month.csv tot-monthly.csv user-all.csv user-month.csv verify-newver.csv
 verdump.csv:
 	(echo '.mode csv'; echo '.headers on'; echo 'select * from vers') | sqlite3 $(DB) > $@
 %.csv: %.sql

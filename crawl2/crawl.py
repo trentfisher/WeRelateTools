@@ -11,12 +11,13 @@ import math
 import time
 import random
 from bs4 import BeautifulSoup
+import urllib
 
 dbfile="wr.db"
 werelateurl = "https://www.werelate.org"
 rssurl = werelateurl+"/wiki/Special:Recentchanges?feed=rss&limit=5000&days=3"
-allpersonurl = werelateurl+"/w/index.php?title=Special%3AAllpages&from=&namespace=108"
-allfamilyurl = werelateurl+"/w/index.php?title=Special%3AAllpages&from=&namespace=110"
+allpersonurl = werelateurl+"/w/index.php?title=Special%3AAllpages&namespace=108&from="
+allfamilyurl = werelateurl+"/w/index.php?title=Special%3AAllpages&namespace=110&from="
 count = {'fetchrss':0, 'fetchraw':0, 'fetchhist':0}
 
 # set up a persistent connection
@@ -52,7 +53,7 @@ def getrss(url):
 
 # get the history for a given page
 def gethist(name):
-    url = f"https://www.werelate.org/w/index.php?title={name}&action=history&limit=50"
+    url = f"https://www.werelate.org/w/index.php?title={urllib.parse.quote(name)}&action=history&limit=50"
     hist = []
     while True:
         print(f"fetching history page {url}")
@@ -73,7 +74,7 @@ def gethist(name):
             hist.append({"title": title, "link": link, "pubDate": pubDate, "creator": creator})
 
         # look for link to next page
-        next_page_link = soup.find('a', string='next 50')
+        next_page_link = soup.find('a', string=re.compile('^next \d+'))
         if (next_page_link):
             url = 'https://www.werelate.org' + next_page_link.get('href')
         else:
@@ -87,11 +88,11 @@ def getraw(page, verid=None):
     if (page.startswith("https://")):
         url = page+"?action=raw"
     else:
-        url = f"{werelateurl}/w/index.php?title={page}&oldid={verid}&action=raw"
+        url = f"{werelateurl}/w/index.php?title={urllib.parse.quote(page)}&oldid={verid}&action=raw"
 
     response = wrsession.get(url)
     response.raise_for_status()
-    #time.sleep(random.random()*2)
+    time.sleep(random.random())
     count['fetchraw'] += 1;
     txt = response.text
     #print(txt)
@@ -373,38 +374,60 @@ def crawltree(name):
                         connections.append(i)
         print(f"connections visited {len(visited)} pending {len(connections)}")
 
-def crawlall():
+def crawlall(startpage=""):
     db = opendb()
 
-    for url in allpersonurl, allfamilyurl:
+    starturls = []
+    if (re.search("^Person:", startpage)):
+        starturls = [allpersonurl+startpage, allfamilyurl]
+    else:
+        starturls = [allfamilyurl+startpage, allpersonurl]
+        
+    for url in starturls:
         while True:
             print(f"Loading {url}")
             response = requests.get(url)
             soup = BeautifulSoup(response.content, 'html.parser')
 
+            names = []
             contentbox = soup.find("td", id="contentbox")
             for link in contentbox.find_all("a", href=re.compile("/wiki/(Person|Family):")):
                 # skip redirects
                 if (link.find_parent(class_='allpagesredirect')):
                     continue
                 name = link.get('title')
-                print(f"found link {name}")
-                # get the relations either from DB or xml
-                relations = getrelations(db, name)
-                if (not relations):
-                    relations = xml2relations(getraw(name))
-
-                # now add it to the database
-                addrelations(db, name, relations)
-                addpagehist(db, name)
-
+                #print(f"found link {name}")
+                names.append(name)
+            
             # got all the links, on to the next page
             next_page_link = soup.find('a', string=re.compile('^Next page '))
-            if next_page_link:
-                url = 'https://www.werelate.org' + next_page_link.get('href')
-            else:
+            if not next_page_link:
                 break
-    
+
+            print(f"all pages got {len(names)} pages, from {names[0]} to {names[-1]}")
+            url = 'https://www.werelate.org' + next_page_link.get('href')
+            
+            # process the batch we just got, but if we have the last in the list
+            # skip the whole batch
+            relations = getrelations(db, names[-1])
+            if (relations):
+                continue
+
+            for name in names:
+                # try getting relations from db
+                relations = getrelations(db, name)
+                if (relations):
+                    continue
+
+                try:
+                    # new page, fetch info and add to the db
+                    relations = xml2relations(getraw(name))
+                    addrelations(db, name, relations)
+                    addpagehist(db, name)
+                except Exception as e:
+                    print("Failed to load info for {name}, skipping")
+            
+
 # this is used when the scoring algorithm changes, need to go back and update the scores
 def updatescore():
     db = opendb()
@@ -425,7 +448,7 @@ def main():
         for p in sys.argv[2:]:
             crawltree(p)
     elif (action == "crawlall"):
-        crawlall()
+        crawlall(sys.argv[2])
     elif (action == "score"):
         score = getscore(getraw(sys.argv[2]))
         print(f"quality store: {score[0]} {score[1]}")
