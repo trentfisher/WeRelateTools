@@ -15,7 +15,7 @@ import urllib
 
 dbfile="wr.db"
 werelateurl = "https://www.werelate.org"
-rssurl = werelateurl+"/wiki/Special:Recentchanges?feed=rss&limit=5000&days=3"
+rssurl = werelateurl+"/wiki/Special:Recentchanges?feed=rss&limit=5000&days=7"
 allpersonurl = werelateurl+"/w/index.php?title=Special%3AAllpages&namespace=108&from="
 allfamilyurl = werelateurl+"/w/index.php?title=Special%3AAllpages&namespace=110&from="
 count = {'fetchrss':0, 'fetchraw':0, 'fetchhist':0}
@@ -391,6 +391,10 @@ def crawlall(startpage=""):
 
             names = []
             contentbox = soup.find("td", id="contentbox")
+            if not contentbox:
+                print(f"Error: no contentbox in {url}")
+                continue
+            
             for link in contentbox.find_all("a", href=re.compile("/wiki/(Person|Family):")):
                 # skip redirects
                 if (link.find_parent(class_='allpagesredirect')):
@@ -432,7 +436,9 @@ def crawlall(startpage=""):
 def updatescore():
     db = opendb()
     cursor = db.cursor()
+    # this trick will get us the current version number of the scoring algorithm
     score = getscore(None)
+    
     cursor.execute("SELECT * FROM vers WHERE scorever != ?", [score[1]])
     for row in cursor:
         score = getscore(getraw(row[0], row[1]))
@@ -448,7 +454,11 @@ def main():
         for p in sys.argv[2:]:
             crawltree(p)
     elif (action == "crawlall"):
-        crawlall(sys.argv[2])
+        if len(sys.argv) <= 2:
+            crawlall()
+        else:
+            for p in sys.argv[2:]:
+                crawlall(p)
     elif (action == "score"):
         score = getscore(getraw(sys.argv[2]))
         print(f"quality store: {score[0]} {score[1]}")
