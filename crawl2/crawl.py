@@ -66,6 +66,9 @@ def gethist(name):
         pagehistorylist = soup.find("ul", id="pagehistory")
         for histitem in pagehistorylist.find_all("li", recursive=False):
             creator = histitem.find("span", class_="history-user").find('a').get('title')
+            # remove the User: prefix
+            if (creator.startswith("User:")):
+                creator = creator[5:]
             histlink = histitem.find("a", string=re.compile("^\d\d:\d\d, \d"))
             pubDate = histlink.string
             title = histlink.get("title")
@@ -218,12 +221,20 @@ def adddbhist(db, name, verid, ts, user, score, scoredif, scorever, newver):
                        (name, verid, ts, user, score, scoredif, scorever, newver))
         db.commit()
 
-def getdbhist(db, name):
+def getdbhistids(db, name):
     cursor = db.cursor()
     cursor.execute('SELECT id FROM vers WHERE name = ? ORDER BY ts', [name])
     verlist = []
     for row in cursor:
         verlist.append(row[0])
+    return verlist
+
+def getdbhist(db, name):
+    cursor = db.cursor()
+    cursor.execute('SELECT ts,score,scoredif,newver FROM vers WHERE name = ? ORDER BY ts', [name])
+    verlist = []
+    for row in cursor:
+        verlist.append(row)
     return verlist
 
 def addrelations(db, name, rels):
@@ -291,7 +302,7 @@ def addpagehist(db, name):
     lastscore = 0
     raw = None
     # optimization: get a list of revs in db, and only update missing ones
-    verlist = getdbhist(db, name)
+    verlist = getdbhistids(db, name)
     verdict = dict.fromkeys(verlist, 1)
 
     for h in hist:
@@ -431,6 +442,15 @@ def crawlall(startpage=""):
                 except Exception as e:
                     print("Failed to load info for {name}, skipping")
             
+def pageinfo(db, name):
+    relations = getrelations(db, name)
+    verlist = getdbhist(db, name)
+
+    print(relations)
+    for h in verlist:
+        print("    ", end="")
+        print(h)
+
 
 # this is used when the scoring algorithm changes, need to go back and update the scores
 def updatescore():
@@ -470,6 +490,16 @@ def main():
         db = opendb()
         for p in sys.argv[2:]:
             addpagehist(db, p)
+    elif (action == "reload"):
+        db = opendb()
+        for p in sys.argv[2:]:
+            deletepage(db, p)            
+            addpagehist(db, p)
+    elif (action == "info"):
+        db = opendb()
+        for p in sys.argv[2:]:
+            pageinfo(db, p)
+
     # only needed when the score schema changes
     elif (action == "updatescore"):
         updatescore()
