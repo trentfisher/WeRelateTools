@@ -1,0 +1,14 @@
+.headers on
+.mode csv
+SELECT
+        user,
+        COUNT(*) as edit_count,
+        SUM(newver) as new_count,
+        SUM(scoredif) as tot_scoredif,
+        SUM(scoredif)/CAST(count(*) as REAL) AS scoredif_per_edit,
+        MIN(ts) as first_edit,
+        MAX(ts) as latest_edit,
+        MAX(ts) - MIN(ts) as lifetime
+FROM vers
+GROUP BY user
+ORDER BY user;

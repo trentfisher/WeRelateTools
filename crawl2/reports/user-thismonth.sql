@@ -5,9 +5,10 @@ SELECT
         count(*) as edit_count,
         sum(newver) as new_count,
         sum(scoredif) as tot_scoredif,
-        cAST(count(*) as REAL)/sum(scoredif),
+  	sum(scoredif)/CAST(count(*) as REAL) AS scoredif_per_edit,
         min(ts) as first_edit,
         max(ts) as latest_edit
 FROM vers
+WHERE ts >= date('now', '-1 month')
 GROUP BY user
 ORDER BY user;

@@ -95,7 +95,7 @@ def getraw(page, verid=None):
 
     response = wrsession.get(url)
     response.raise_for_status()
-    time.sleep(random.random())
+#    time.sleep(random.random())
     count['fetchraw'] += 1;
     txt = response.text
     #print(txt)
@@ -388,11 +388,16 @@ def crawltree(name):
 def crawlall(startpage=""):
     db = opendb()
 
-    starturls = []
-    if (re.search("^Person:", startpage)):
-        starturls = [allpersonurl+startpage, allfamilyurl]
+    if (startpage):
+        if (re.search("^Person:", startpage)):
+            starturls = [allpersonurl+startpage, allfamilyurl]
+        else:
+            starturls = [allfamilyurl+startpage, allpersonurl]
     else:
-        starturls = [allfamilyurl+startpage, allpersonurl]
+        if (random.random() > 0.5):
+            starturls = [allpersonurl, allfamilyurl]
+        else:
+            starturls = [allfamilyurl, allpersonurl]
         
     for url in starturls:
         while True:
@@ -440,7 +445,7 @@ def crawlall(startpage=""):
                     addrelations(db, name, relations)
                     addpagehist(db, name)
                 except Exception as e:
-                    print("Failed to load info for {name}, skipping")
+                    print(f"Failed to load info for {name}, skipping")
             
 def pageinfo(db, name):
     relations = getrelations(db, name)
