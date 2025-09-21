@@ -457,6 +457,10 @@ def pageinfo(db, name):
         print(h)
 
 
+def jsontreeup(db, name):
+    relations = getrelations(db, name)
+    print(relations)
+    
 # this is used when the scoring algorithm changes, need to go back and update the scores
 def updatescore():
     db = opendb()
@@ -504,7 +508,10 @@ def main():
         db = opendb()
         for p in sys.argv[2:]:
             pageinfo(db, p)
-
+    elif (action == "jsontreeup"):
+        db = opendb()
+        jsontreeup(db, sys.argv[2])
+        
     # only needed when the score schema changes
     elif (action == "updatescore"):
         updatescore()
