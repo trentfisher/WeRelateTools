@@ -38,17 +38,28 @@ def getrss(url):
     pages = []
     # The standard structure of an RSS feed: <rss><channel><item><link>
     for item in root.findall('./channel/item'):
-        title = item.find('title').text
-        link = item.find('link').text
-        pubDate = item.find('pubDate').text
-        creator = item.find('dc:creator', ns)
-        if (type(creator) == "None"):
-            creator = "unknown"
-        else:
-            creator = creator.text
-        #print(f"rss item {title} {link} {pubDate} {creator}")
+        itemrec = {}
+        itemrec['title'] = item.find('title').text
+        itemrec['link'] = item.find('link').text
+        itemrec['pubDate'] = item.find('pubDate').text
 
-        pages.append({"title": title, "link": link, "pubDate": pubDate, "creator": creator})
+        if (item.find('dc:creator', ns) == "None"):
+            itemrec['creator'] = "unknown"
+        else:
+            itemrec['creator'] = item.find('dc:creator', ns).text
+            
+        if (itemrec['title'] == 'Special:Log/delete'):
+            m = re.search('title="(Person|Family):(.+)">', item.find('description').text)
+            if (m):
+                itemrec['title'] = itemrec['delete'] = m.group(1)+":"+m.group(2)
+        elif (itemrec['title'] == 'Special:Log/move'):
+            m = re.search(' title="(Person|Family):(.+)">.+> renamed to <.+ title="(Person|Family):(.+)">',
+                         item.find('description').text)
+            if (m):
+                itemrec['title'] = m.group(1)+":"+m.group(2)
+                itemrec['move'] = m.group(3)+":"+m.group(4)
+                print(f"RENAME {itemrec['title']} to {itemrec['move']}")
+        pages.append(itemrec)
     return pages
 
 # get the history for a given page
@@ -267,10 +278,12 @@ def renamepage(db, oldname, newname):
     cursor = db.cursor()
 
     # check if the rename already happened
-    cursor.execute('SELECT * FROM vers WHERE name = ?', [newname])
+    cursor.execute('SELECT * FROM relations WHERE name = ?', [newname])
     row = cursor.fetchone()
     if (row):
         return
+
+    # TBD check if origin exists
     
     cursor.execute("UPDATE vers SET name = ? WHERE  name = ?",
                    (newname, oldname))
@@ -291,7 +304,13 @@ def crawlrss():
     pgs = getrss(rssurl)
     for p in pgs:
         print(p)
-        if (re.search('^(Person|Family):', p['title'])):
+        if ('delete' in p):
+            print(f"DELETE {p['delete']}")
+            deletepage(db, p['delete'])
+        elif ('move' in p):
+            print(f"RENAME {p['title']} to {p['move']}")
+            renamepage(db, p['title'], p['move'])
+        elif (re.search('^(Person|Family):', p['title'])):
             addpagehist(db, p['title'])
     print(f"RSS summary: {len(pgs)} entries from {pgs[-1]['pubDate']} to {pgs[0]['pubDate']}")
 
