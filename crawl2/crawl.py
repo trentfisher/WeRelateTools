@@ -113,6 +113,12 @@ def getraw(page, verid=None):
 
     # reconstruct into valid xml
     txt = re.sub("\s*<show_sources_images_notes/>\s*", "", txt)
+    txt = re.sub("^\s+", "", txt)
+    # some old versions have this
+    txt,c = re.subn("child of family", "child_of_family", txt)
+    if (c > 0):
+        print("INVALID XML")
+        
     g = None
     if (txt.startswith('<person>')):
         g = re.search(r"(<person>.*)(</person>)(.*)", txt, flags=re.DOTALL)
@@ -208,7 +214,9 @@ def getscore(root):
         
 #------------------------------------------------------------------------
 def opendb():
-    return sqlite3.connect(dbfile)
+    db = sqlite3.connect(dbfile)
+    db.execute('PRAGMA busy_timeout = 30000')
+    return db
 
 # add a page history entry to the database or update it if needed
 def adddbhist(db, name, verid, ts, user, score, scoredif, scorever, newver):
@@ -362,7 +370,7 @@ def addpagehist(db, name):
             relations = xml2relations(raw)
             addrelations(db, name, relations)
 
-        if (score[1] > 0):
+        if (score[1] >= 0):
             print(f"     score diff {score[0] - lastscore}")
             adddbhist(db, name, verid, h['pubDate'], h['creator'],
                     score[0], (score[0] - lastscore), score[1], int(h==hist[0]))
@@ -507,6 +515,9 @@ def main():
         else:
             for p in sys.argv[2:]:
                 crawlall(p)
+    elif (action == "getraw"):
+        for p in sys.argv[2:]:
+            print(getraw(p))
     elif (action == "score"):
         score = getscore(getraw(sys.argv[2]))
         print(f"quality store: {score[0]} {score[1]}")
