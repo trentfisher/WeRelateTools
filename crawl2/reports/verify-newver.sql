@@ -1,3 +1,5 @@
+PRAGMA busy_timeout = 30000;
+
 -- look for cases where the version history for a page has no start marker
 SELECT name
 FROM vers

@@ -75,6 +75,10 @@ def gethist(name):
         soup = BeautifulSoup(response.content, 'html.parser')
 
         pagehistorylist = soup.find("ul", id="pagehistory")
+        # deleted pages have no history
+        if (not pagehistorylist):
+            return []
+        
         for histitem in pagehistorylist.find_all("li", recursive=False):
             creator = histitem.find("span", class_="history-user").find('a').get('title')
             # remove the User: prefix
@@ -131,7 +135,11 @@ def getraw(page, verid=None):
     txt = g.group(1) + g.group(2)
     body = xml.etree.ElementTree.Element("body", {})
     body.text = g.group(3)
-    root = xml.etree.ElementTree.fromstring(txt)
+    try:
+        root = xml.etree.ElementTree.fromstring(txt)
+    except xml.etree.ElementTree.ParseError:
+        print(f"Error: invalid xml for {page} ver {verid}")
+        return None
     root.append(body)
     return root
 
