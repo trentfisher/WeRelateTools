@@ -26,7 +26,7 @@ count_newusers=`cat user-new-$rpttype.csv | wc -l`
 cat <<EOF1
 ---
 title: WeRelate Monthly Activity Report
-===
+---
 
 Here is the activity in WeRelate for the month ($startmonth to $endmonth):
 
