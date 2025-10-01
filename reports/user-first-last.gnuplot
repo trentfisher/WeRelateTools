@@ -1,3 +1,4 @@
+load "gnuplot-common"
 set datafile separator ","
 set xdata time
 set ydata time

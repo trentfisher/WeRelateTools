@@ -1,3 +1,6 @@
+---
+title: WeRelate Monthly Activity Report
+===
 
 Here is the activity in WeRelate for the month (2025-09-01 to 2025-09-30):
 

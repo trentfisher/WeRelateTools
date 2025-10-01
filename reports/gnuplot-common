@@ -1,0 +1,13 @@
+# defaults for all charts
+set title font ",12"
+set xtics font ",9"
+set ytics font ",9"
+set y2tics font ",9"
+set key font ",9"
+set style line 1 linewidth 2
+set style data lines
+set style function lines
+set style line 2 linewidth 2
+set style line 3 linewidth 2
+set style line 4 linewidth 2
+set style line 5 linewidth 2
