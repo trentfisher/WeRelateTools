@@ -457,10 +457,15 @@ def crawlall(startpage=""):
             # got all the links, on to the next page
             next_page_link = soup.find('a', string=re.compile('^Next page '))
             if not next_page_link:
+                print(f"no next page link, stopping")
                 break
-
-            print(f"all pages got {len(names)} pages, from {names[0]} to {names[-1]}")
             url = 'https://www.werelate.org' + next_page_link.get('href')
+
+            if (len(names)):
+                print(f"all pages got {len(names)} pages, from {names[0]} to {names[-1]}")
+            else:
+                print(f"all pages got {len(names)} pages")
+                continue
             
             # process the batch we just got, but if we have the last in the list
             # skip the whole batch

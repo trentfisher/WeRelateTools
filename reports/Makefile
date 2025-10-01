@@ -40,3 +40,5 @@ verdump.csv:
 	sqlite3 $(DB) < $< > $@ || rm -f $@
 %.png: %.gnuplot
 	gnuplot -e "set terminal png; set output '$@'" $< || rm -f $@
+%.svg: %.gnuplot
+	gnuplot -e "set terminal svg; set output '$@'" $< || rm -f $@
