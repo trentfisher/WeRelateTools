@@ -1,5 +1,10 @@
 #!/bin/sh
-
+#
+# this script is for generating the monthly activity report for WeRelate
+# by default it uses the numbers from the last complete month,
+# but give it the parameter "thismonth" and it will show the information
+# for the current (in-progress) month
+#
 rpttype=lastmonth
 if [ "$1" ]
 then
@@ -17,9 +22,8 @@ count_new=`awk -F, '/TOTAL/ {print $7}' tot-$rpttype.csv`
 count_new_persons=`awk -F, '/Person/ {print $7}' tot-$rpttype.csv`
 
 count_newusers=`cat user-new-$rpttype.csv | wc -l` 
-newusers=`cat user-new-$rpttype.csv`
 
-cat <<EOF
+cat <<EOF1
 
 Here is the activity in WeRelate for the month ($startmonth to $endmonth):
 
@@ -29,9 +33,19 @@ of those pages, $count_new ($count_new_persons Person) of them were newly create
 
 There were $count_newusers people who joined WeRelate this month:
 
-$newusers
+EOF1
 
-Here is a chart of the daily activity: page-daily-$rpttype.png
+cat user-new-$rpttype.csv | while read u
+do
+    ec=`awk -F, '/'"$u"'/ {print $2}' user-$rpttype.csv`
+    echo '* ['$u']('https://www.werelate.org/wiki/User:$u')' -- '['$ec edits']('https://www.werelate.org/wiki/Special:Contributions/$u')'
+done
 
-EOF
+cat <<EOF2
+
+Here is a chart of the daily activity:
+
+![daily activity chart](page-daily-$rpttype.png)
+
+EOF2
 
