@@ -4,8 +4,8 @@ Monthly activity summaries:
 * [last month](reports/report-lastmonth.md)
 * [this month](reports/report-thismonth.md)
 
-Here is a chart comparing the historical data from [the old growth graph](https://www.werelate.org/wiki/Image:Werelate_growth_v2.jpg) and my data:
+Here remixed version [the old growth graph](https://www.werelate.org/wiki/Image:Werelate_growth_v2.jpg):
 
-![old v. new person counts](reports/verify-persons.png)
+![werelate.org page activity](reports/tot-persons-old.png)
 
-just a first version to test with
+More anon.
