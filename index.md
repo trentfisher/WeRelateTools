@@ -10,54 +10,54 @@ Here remixed version [the old growth graph](https://www.werelate.org/wiki/Image:
 
 The following charts are first attempts from incomplete (but mostly complete) data:
 
-![page-annually.png](page-annually.png)
-from data in [tot-annually.csv](tot-annually.csv)
+![reports/page-annually.png](reports/page-annually.png)
+from data in [reports/tot-annually.csv](reports/tot-annually.csv)
 
-![page-daily.png](page-daily.png) from data in
-[tot-lastmonth-daily.csv](tot-lastmonth-daily.csv)
-[tot-thismonth-daily.csv](tot-thismonth-daily.csv)
+![reports/page-daily.png](reports/page-daily.png) from data in
+[reports/tot-lastmonth-daily.csv](reports/tot-lastmonth-daily.csv)
+[reports/tot-thismonth-daily.csv](reports/tot-thismonth-daily.csv)
 
-![page-monthly.png](page-monthly.png)
-from data in [tot-monthly.csv](tot-monthly.csv)
+![reports/page-monthly.png](reports/page-monthly.png)
+from data in [reports/tot-monthly.csv](reports/tot-monthly.csv)
 
-![score-monthly.png](score-monthly.png)
-from data in [tot-monthly.csv](tot-monthly.csv)
+![reports/score-monthly.png](reports/score-monthly.png)
+from data in [reports/tot-monthly.csv](reports/tot-monthly.csv)
 
-![tot-persons-old.png](tot-persons-old.png)
-from data in [tot-persons-old.csv](tot-persons-old.csv)
+![reports/tot-persons-old.png](reports/tot-persons-old.png)
+from data in [reports/tot-persons-old.csv](reports/tot-persons-old.csv)
 
-![user-first-last.png](user-first-last.png)
-from data in [user-alltime.csv](user-alltime.csv)
+![reports/user-first-last.png](reports/user-first-last.png)
+from data in [reports/user-alltime.csv](reports/user-alltime.csv)
 
-![user-first-len.png](user-first-len.png)
-from data in [user-alltime.csv](user-alltime.csv)
+![reports/user-first-len.png](reports/user-first-len.png)
+from data in [reports/user-alltime.csv](reports/user-alltime.csv)
 
-![user-lastmonth.png](user-lastmonth.png)
-from data in [user-thismonth.csv](user-thismonth.csv)
+![reports/user-lastmonth.png](reports/user-lastmonth.png)
+from data in [reports/user-thismonth.csv](reports/user-thismonth.csv)
 
-![user-monthly.png](user-monthly.png)
-from data in [tot-monthly.csv](tot-monthly.csv)
+![reports/user-monthly.png](reports/user-monthly.png)
+from data in [reports/tot-monthly.csv](reports/tot-monthly.csv)
 
-![user-retention-monthly.png](user-retention-monthly.png)
-from data in [user-retention-monthly.csv](user-retention-monthly.csv)
+![reports/user-retention-monthly.png](reports/user-retention-monthly.png)
+from data in [reports/user-retention-monthly.csv](reports/user-retention-monthly.csv)
 
-![user-tenure.png](user-tenure.png)
-from data in [user-alltime.csv](user-alltime.csv)
+![reports/user-tenure.png](reports/user-tenure.png)
+from data in [reports/user-alltime.csv](reports/user-alltime.csv)
 
-![verify-persons.png](verify-persons.png)
-from data in [tot-annually.csv](tot-annually.csv) [tot-persons-old.csv](tot-persons-old.csv)
+![reports/verify-persons.png](reports/verify-persons.png)
+from data in [reports/tot-annually.csv](reports/tot-annually.csv) [reports/tot-persons-old.csv](reports/tot-persons-old.csv)
 
 Other data files:
 
-[page-score-top.csv](page-score-top.csv)
-[tot.csv](tot.csv)
-[tot-lastmonth.csv](tot-lastmonth.csv)
-[tot-monthly2.csv](tot-monthly2.csv)
-[tot-thismonth.csv](tot-thismonth.csv)
-[user-lastmonth.csv](user-lastmonth.csv)
-[user-new-lastmonth.csv](user-new-lastmonth.csv)
-[user-new-monthly.csv](user-new-monthly.csv)
-[user-new-thismonth.csv](user-new-thismonth.csv)
-[user-thisweek.csv](user-thisweek.csv)
-[verify-newver.csv](verify-newver.csv)
+[reports/page-score-top.csv](reports/page-score-top.csv)
+[reports/tot.csv](reports/tot.csv)
+[reports/tot-lastmonth.csv](reports/tot-lastmonth.csv)
+[reports/tot-monthly2.csv](reports/tot-monthly2.csv)
+[reports/tot-thismonth.csv](reports/tot-thismonth.csv)
+[reports/user-lastmonth.csv](reports/user-lastmonth.csv)
+[reports/user-new-lastmonth.csv](reports/user-new-lastmonth.csv)
+[reports/user-new-monthly.csv](reports/user-new-monthly.csv)
+[reports/user-new-thismonth.csv](reports/user-new-thismonth.csv)
+[reports/user-thisweek.csv](reports/user-thisweek.csv)
+[reports/verify-newver.csv](reports/verify-newver.csv)
 
