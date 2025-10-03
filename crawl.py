@@ -469,9 +469,9 @@ def crawlall(startpage=""):
             
             # process the batch we just got, but if we have the last in the list
             # skip the whole batch
-            relations = getrelations(db, names[-1])
-            if (relations):
-                continue
+            #relations = getrelations(db, names[-1])
+            #if (relations):
+            #    continue
 
             for name in names:
                 # try getting relations from db

@@ -5,8 +5,8 @@ title: WeRelate Monthly Activity Report
 Here is the activity in WeRelate for the month (2025-09-01 to 2025-09-30):
 
 There were 50 active users
-making 23747 edits to 8753 pages (Person and Family)
-of those pages, 5225 (3605 Person) of them were newly created.
+making 24133 edits to 8972 pages (Person and Family)
+of those pages, 5263 (3633 Person) of them were newly created.
 
 There were 15 people who joined WeRelate this month:
 
