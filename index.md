@@ -10,41 +10,41 @@ Here remixed version [the old growth graph](https://www.werelate.org/wiki/Image:
 
 The following charts are first attempts from incomplete (but mostly complete) data:
 
-![page-annually.gnuplot](page-annually.gnuplot)
+![page-annually.png](page-annually.png)
 from data in [tot-annually.csv](tot-annually.csv)
 
-![page-daily.gnuplot](page-daily.gnuplot) from data in
+![page-daily.png](page-daily.png) from data in
 [tot-lastmonth-daily.csv](tot-lastmonth-daily.csv)
 [tot-thismonth-daily.csv](tot-thismonth-daily.csv)
 
-![page-monthly.gnuplot](page-monthly.gnuplot)
+![page-monthly.png](page-monthly.png)
 from data in [tot-monthly.csv](tot-monthly.csv)
 
-![score-monthly.gnuplot](score-monthly.gnuplot)
+![score-monthly.png](score-monthly.png)
 from data in [tot-monthly.csv](tot-monthly.csv)
 
-![tot-persons-old.gnuplot](tot-persons-old.gnuplot)
+![tot-persons-old.png](tot-persons-old.png)
 from data in [tot-persons-old.csv](tot-persons-old.csv)
 
-![user-first-last.gnuplot](user-first-last.gnuplot)
+![user-first-last.png](user-first-last.png)
 from data in [user-alltime.csv](user-alltime.csv)
 
-![user-first-len.gnuplot](user-first-len.gnuplot)
+![user-first-len.png](user-first-len.png)
 from data in [user-alltime.csv](user-alltime.csv)
 
-![user-lastmonth.gnuplot](user-lastmonth.gnuplot)
+![user-lastmonth.png](user-lastmonth.png)
 from data in [user-thismonth.csv](user-thismonth.csv)
 
-![user-monthly.gnuplot](user-monthly.gnuplot)
+![user-monthly.png](user-monthly.png)
 from data in [tot-monthly.csv](tot-monthly.csv)
 
-![user-retention-monthly.gnuplot](user-retention-monthly.gnuplot)
+![user-retention-monthly.png](user-retention-monthly.png)
 from data in [user-retention-monthly.csv](user-retention-monthly.csv)
 
-![user-tenure.gnuplot](user-tenure.gnuplot)
+![user-tenure.png](user-tenure.png)
 from data in [user-alltime.csv](user-alltime.csv)
 
-![verify-persons.gnuplot](verify-persons.gnuplot)
+![verify-persons.png](verify-persons.png)
 from data in [tot-annually.csv](tot-annually.csv) [tot-persons-old.csv](tot-persons-old.csv)
 
 Other data files:
