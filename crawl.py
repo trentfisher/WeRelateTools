@@ -258,7 +258,7 @@ def getdbhistids(db, name):
 
 def getdbhist(db, name):
     cursor = db.cursor()
-    cursor.execute('SELECT ts,score,scoredif,newver FROM vers WHERE name = ? ORDER BY ts', [name])
+    cursor.execute('SELECT ts,score,scoredif,newver,id FROM vers WHERE name = ? ORDER BY ts', [name])
     verlist = []
     for row in cursor:
         verlist.append(row)
@@ -337,9 +337,10 @@ def addpagehist(db, name):
     lastscore = 0
     raw = None
     # optimization: get a list of revs in db, and only update missing ones
-    verlist = getdbhistids(db, name)
-    verdict = dict.fromkeys(verlist, 1)
-
+    verlist = getdbhist(db, name)
+    #verdict = {t[-1]: t for t in verlist}
+    verdict = {t[-1]: i for i,t in enumerate(verlist)}
+    
     for h in hist:
         print("    ", end="")
         print(h)
@@ -367,6 +368,7 @@ def addpagehist(db, name):
         # skip if we already have it in the db
         if (verid in verdict):
             print(f"skipping version {verid} as it is already in db")
+            lastscore = verlist[verdict[verid]][1]
             continue
 
         # get the raw xml content for calculating the score
@@ -424,10 +426,14 @@ def crawlall(startpage=""):
     db = opendb()
 
     if (startpage):
-        if (re.search("^Person:", startpage)):
-            starturls = [allpersonurl+startpage, allfamilyurl]
+        m =re.search("^(Person|Family):(.+)", startpage)
+        if (m.group(1) == "Person"):
+            starturls = [allpersonurl+m.group(2), allfamilyurl]
+        elif (m.group(1) == "Family"):
+            starturls = [allfamilyurl+m.group(2), allpersonurl]
         else:
-            starturls = [allfamilyurl+startpage, allpersonurl]
+            print(f"do not know what to do with {startpage}")
+            return
     else:
         if (random.random() > 0.5):
             starturls = [allpersonurl, allfamilyurl]
