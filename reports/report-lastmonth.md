@@ -5,12 +5,12 @@ title: WeRelate Monthly Activity Report
 Here is the activity in WeRelate for the month (2025-09-01 to 2025-09-30):
 
 There were 50 active users
-making 24145 edits to 8981 pages (Person and Family)
-of those pages, 5266 (3636 Person) of them were newly created.
+making 24227 edits to 9024 pages (Person and Family)
+of those pages, 5278 (3647 Person) of them were newly created.
 
 There were 15 people who joined WeRelate this month:
 
-* [Angela.tincher](https://www.werelate.org/wiki/User:Angela.tincher) -- [17 edits](https://www.werelate.org/wiki/Special:Contributions/Angela.tincher)
+* [Angela.tincher](https://www.werelate.org/wiki/User:Angela.tincher) -- [19 edits](https://www.werelate.org/wiki/Special:Contributions/Angela.tincher)
 * [Apresson85](https://www.werelate.org/wiki/User:Apresson85) -- [1 edits](https://www.werelate.org/wiki/Special:Contributions/Apresson85)
 * [Digginstoor](https://www.werelate.org/wiki/User:Digginstoor) -- [2 edits](https://www.werelate.org/wiki/Special:Contributions/Digginstoor)
 * [Fuzzybutt](https://www.werelate.org/wiki/User:Fuzzybutt) -- [3 edits](https://www.werelate.org/wiki/Special:Contributions/Fuzzybutt)
