@@ -9,7 +9,9 @@ set boxwidth binwidth
 set style fill solid border -1
 
 # hide the huge 0 bar
-set yrange [0:300]
+#set yrange [0:300]
+set logscale y
+
 # TBD increase this in a few years
 set xrange[-1:20]
 

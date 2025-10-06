@@ -9,6 +9,7 @@ set ytics nomirror
 set xtics nomirror
 set format y "%.0f"
 set format y2 "%.0f"
+set key top left
 set title "Person and Family Page activity (monthly)"
 plot \
  'tot-monthly.csv' skip 1 using 1:3 with lines linewidth 2 title "active pages", \

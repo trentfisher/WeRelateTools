@@ -4,7 +4,7 @@ set xdata time
 set timefmt "%Y"
 set format x "%Y"
 # TODO: increase this as the line nears the top
-set y2range [0:4000000]
+set y2range [0:5000000]
 set y2tics
 set ytics nomirror
 set xtics nomirror
