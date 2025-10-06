@@ -12,7 +12,7 @@ set format y "%.1s%c"
 set format y2 "%.1s%c"
 set yrange [0:]
 set key top left
-set title "Person & Family Page Activity (annual)"
+set title "Person and Family Page Activity (annual)"
 plot \
  'tot-annually.csv' skip 1 using 1:3 with lines linewidth 2 title "active pages" , \
  'tot-annually.csv' skip 1 using 1:4 with lines linewidth 2 title "edits", \

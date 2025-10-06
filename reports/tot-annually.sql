@@ -10,9 +10,9 @@ SELECT
     SUM(count_newver) OVER (ORDER BY year) AS cumulative_newver,
     sum_score,
     sum_scoredif,
-    scoredif_per_edit,
-    count_pages_person,
-    count_pages_family
+    scoredif_per_edit
+--    count_pages_person,
+--    count_pages_family
 FROM (
     SELECT 
         STRFTIME('%Y', ts) AS year,
@@ -23,8 +23,8 @@ FROM (
         SUM(CAST(score AS INTEGER)) AS sum_score,
         SUM(CAST(scoredif AS INTEGER)) as sum_scoredif,
         SUM(scoredif)/CAST(count(*) as REAL) as scoredif_per_edit
-        COUNT(CASE WHEN DISTINCT name LIKE 'Person:%') as count_pages_person,
-        COUNT(CASE WHEN DISTINCT name LIKE 'Family:%') as count_pages_family,
+        -- COUNT(CASE WHEN (DISTINCT name) LIKE 'Person:%' THEN 1 END) as count_pages_person,
+        -- COUNT(CASE WHEN (DISTINCT name) LIKE 'Family:%' THEN 1 END) as count_pages_family,
     FROM
         vers
     GROUP BY 

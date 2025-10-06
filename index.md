@@ -44,6 +44,7 @@ from data in [reports/tot-monthly.csv](reports/tot-monthly.csv)
 Next the previous graph with a second line showing how many users are still at the site 1 year after they made their first edit:
 
 ![reports/user-retention-monthly.png](reports/user-retention-monthly.png)
+
 from data in [reports/user-retention-monthly.csv](reports/user-retention-monthly.csv)
 
 Next is how long do users remain active.  Note that the first column is truncated as many thousands of users are only with us less than a year:
@@ -55,6 +56,7 @@ from data in [reports/user-alltime.csv](reports/user-alltime.csv)
 This report goes with the "last month" reports, above, showing a histogram of how many edits users made:
 
 ![reports/user-lastmonth.png](reports/user-lastmonth.png)
+
 from data in [reports/user-thismonth.csv](reports/user-thismonth.csv)
 
 These two were an early attempt to find patterns user retention, but the two charts are really just different versions of the same data (rotated 45 degrees from each other).  Probably not of any great interest:
