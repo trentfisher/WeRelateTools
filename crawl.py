@@ -318,6 +318,7 @@ def deletepage(db, name):
 def crawlrss():
     db = opendb()
     pgs = getrss(rssurl)
+    pgs.reverse()   # go from oldest to newest
     for p in pgs:
         print(p)
         if ('delete' in p):
