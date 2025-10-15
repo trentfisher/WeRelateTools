@@ -15,6 +15,8 @@ fi
 # get some numbers for the month
 startmonth=`awk -F, '/TOTAL/ {print $2}' tot-$rpttype.csv`
 endmonth=`awk -F, '/TOTAL/ {print $3}' tot-$rpttype.csv`
+endthismonth=`awk -F, '/TOTAL/ {print $3}' tot-thismonth-daily.csv`
+
 count_users=`awk -F, '/TOTAL/ {print $4}' tot-$rpttype.csv`
 count_pages=`awk -F, '/TOTAL/ {print $5}' tot-$rpttype.csv`
 count_edits=`awk -F, '/TOTAL/ {print $6}' tot-$rpttype.csv`
@@ -48,13 +50,6 @@ There were $count_users active users
 making $count_edits edits to $count_pages pages (Person and Family)
 of those pages, $count_new ($count_new_persons Person) of them were newly created.
 
-| metric | monthly | daily |
-| ------ | ------- | ----- |
-| active pages | `sparkline tot-monthly.csv 3` | `sparkline tot-thismonth-daily.csv 3`
-
-Active users: <img src="data:image/png;base64,$sparkline_users" alt="sparkline"/> $count_users
-pages: `sparkline tot-$rpttype-daily.csv 3`
-
 There were $count_newusers people who joined WeRelate this month:
 
 EOF1
@@ -70,6 +65,16 @@ cat <<EOF2
 Here is a chart of the daily activity:
 
 ![daily activity chart](page-daily-$rpttype.png)
+
+Here is overall activity, up to $endthismonth
+
+| metric | monthly | daily |
+| ------ | ------- | ----- |
+| active users | `sparkline tot-monthly.csv 2` | `sparkline tot-thismonth-daily.csv 2`
+| active pages | `sparkline tot-monthly.csv 3` | `sparkline tot-thismonth-daily.csv 3`
+| page edits | `sparkline tot-monthly.csv 4` | `sparkline tot-thismonth-daily.csv 4`
+| new pages | `sparkline tot-monthly.csv 5` | `sparkline tot-thismonth-daily.csv 5`
+
 
 EOF2
 
