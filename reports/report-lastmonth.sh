@@ -23,6 +23,8 @@ count_new_persons=`awk -F, '/Person/ {print $7}' tot-$rpttype.csv`
 
 count_newusers=`cat user-new-$rpttype.csv | wc -l` 
 
+sparkline_users=`gnuplot -e "filename='tot-$rpttype-daily.csv'; column=3" sparkline.gp  | base64 -w 0`
+
 cat <<EOF1
 ---
 title: WeRelate Monthly Activity Report
@@ -35,6 +37,8 @@ making $count_edits edits to $count_pages pages (Person and Family)
 of those pages, $count_new ($count_new_persons Person) of them were newly created.
 
 There were $count_newusers people who joined WeRelate this month:
+
+Active users: <img src="data:image/png;base64,$sparkline_users" alt="sparkline"/> $count_users
 
 EOF1
 
