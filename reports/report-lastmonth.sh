@@ -23,7 +23,19 @@ count_new_persons=`awk -F, '/Person/ {print $7}' tot-$rpttype.csv`
 
 count_newusers=`cat user-new-$rpttype.csv | wc -l` 
 
-sparkline_users=`gnuplot -e "filename='tot-$rpttype-daily.csv'; column=3" sparkline.gp  | base64 -w 0`
+# produce HTML with inlined image and latest number, given
+# a data file and a column
+sparkline()
+{
+    datafile=$1
+    column=$2
+    simg=`gnuplot -e "filename='$datafile'; column=$column" sparkline.gp  | base64 -w 0`
+    lastd=`awk -F, 'END {print $'$column'}' $datafile`
+    echo '<img src="data:image/png;base64,'$simg'" alt="sparkline"/> '$lastd
+}
+
+sparkline_users=`gnuplot -e "filename='tot-$rpttype-daily.csv'; column=2" sparkline.gp  | base64 -w 0`
+
 
 cat <<EOF1
 ---
@@ -36,9 +48,14 @@ There were $count_users active users
 making $count_edits edits to $count_pages pages (Person and Family)
 of those pages, $count_new ($count_new_persons Person) of them were newly created.
 
-There were $count_newusers people who joined WeRelate this month:
+| metric | monthly | daily |
+| ------ | ------- | ----- |
+| active pages | `sparkline tot-monthly.csv 3` | `sparkline tot-thismonth-daily.csv 3`
 
 Active users: <img src="data:image/png;base64,$sparkline_users" alt="sparkline"/> $count_users
+pages: `sparkline tot-$rpttype-daily.csv 3`
+
+There were $count_newusers people who joined WeRelate this month:
 
 EOF1
 
