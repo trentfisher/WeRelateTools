@@ -31,7 +31,7 @@ sparkline()
     column=$2
     simg=`gnuplot -e "filename='$datafile'; column=$column" sparkline.gp  | base64 -w 0`
     lastd=`awk -F, 'END {print $'$column'}' $datafile`
-    echo '<img src="data:image/png;base64,'$simg'" alt="sparkline"/> '$lastd
+    echo '<img src="data:image/png;base64,'$simg'" alt="sparkline of '$datafile' column '$column'"/> '$lastd
 }
 
 sparkline_users=`gnuplot -e "filename='tot-$rpttype-daily.csv'; column=2" sparkline.gp  | base64 -w 0`

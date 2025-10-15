@@ -1,8 +1,6 @@
 # generate a small sparkline graph
 
 set datafile separator ","
-filename='tot-thismonth-daily.csv'
-column=2
 
 set terminal pngcairo size 100,30 transparent
 set output '/dev/stdout'
