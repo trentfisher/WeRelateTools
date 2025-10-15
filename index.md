@@ -8,7 +8,7 @@ Here remixed version [the old growth graph](https://www.werelate.org/wiki/Image:
 
 ![werelate.org page activity](reports/tot-persons-old.png)
 
-from data in [reports/tot-persons-old.csv](reports/tot-persons-old.csv) (which is just the data from the original chart with some new columns derived from the existing ones)
+from data in [reports/tot-persons-old.csv](reports/tot-persons-old.csv) (which is just the data from the original chart in CSV form)
 
 Here is a new version of that chart, though it combines Person and Family pages:
 

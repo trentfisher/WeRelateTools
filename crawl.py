@@ -52,6 +52,24 @@ def getrss(url):
             m = re.search('title="(Person|Family):(.+)">', item.find('description').text)
             if (m):
                 itemrec['title'] = itemrec['delete'] = m.group(1)+":"+m.group(2)
+
+        # in a merge, the second one is now a redirect
+        # <p>Merge <a href="/wiki/Person:Jean_Ballat_%281%29" title="Person:Jean Ballat (1)">Person:Jean Ballat (1)</a> and <a href="/wiki/Person:Jean_Bala_%282%29" title="Person:Jean Bala (2)">Person:Jean Bala (2)</a></p>
+        # <p>Unmerge <a href="/wiki/Person:Mary_Patterson_%28118%29" title="Person:Mary Patterson (118)">Person:Mary Patterson (118)</a> - reviewed father\'s will</p>
+        elif (itemrec['title'].startswith('Special:ReviewMerge')):
+            m = re.search('Merge <a .+>(Person|Family):(.+)</a> and <a .+>(Person|Family):(.+)</a>', item.find('description').text)
+            if (m):
+                itemrec['title'] = m.group(1)+":"+m.group(2)
+                itemrec['merge'] = m.group(3)+":"+m.group(4)
+                print(f"MERGE {itemrec['merge']} into {itemrec['title']}")
+            else:
+                m = re.search('Unmerge <a .+>(Person|Family):(.+)</a>', item.find('description').text)
+                if (m):
+                    itemrec['title'] = m.group(1)+":"+m.group(2)
+                    print(f"UNMERGE {itemrec['title']}")
+                else:
+                    raise Exception(f"Unknown merge action {item.find('description').text}")
+            
         elif (itemrec['title'] == 'Special:Log/move'):
             m = re.search(' title="(Person|Family):(.+)">.+> renamed to <.+ title="(Person|Family):(.+)">',
                          item.find('description').text)
@@ -327,6 +345,10 @@ def crawlrss():
         elif ('move' in p):
             print(f"RENAME {p['title']} to {p['move']}")
             renamepage(db, p['title'], p['move'])
+        elif ('merge' in p):
+            print(f"merge {p['merge']} to {p['title']}")
+            deletepage(db, p['merge'])
+            addpagehist(db, p['title'])
         elif (re.search('^(Person|Family):', p['title'])):
             addpagehist(db, p['title'])
     print(f"RSS summary: {len(pgs)} entries from {pgs[-1]['pubDate']} to {pgs[0]['pubDate']}")
