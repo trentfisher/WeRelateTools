@@ -15,7 +15,7 @@ fi
 # get some numbers for the month
 startmonth=`awk -F, '/TOTAL/ {print $2}' tot-$rpttype.csv`
 endmonth=`awk -F, '/TOTAL/ {print $3}' tot-$rpttype.csv`
-endthismonth=`awk -F, '/TOTAL/ {print $3}' tot-thismonth-daily.csv`
+endthismonth=`awk -F, 'END {print $1}' tot-thismonth-daily.csv`
 
 count_users=`awk -F, '/TOTAL/ {print $4}' tot-$rpttype.csv`
 count_pages=`awk -F, '/TOTAL/ {print $5}' tot-$rpttype.csv`
