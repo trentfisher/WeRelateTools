@@ -505,8 +505,8 @@ def crawlall(startpage=""):
             for name in names:
                 # try getting relations from db
                 relations = getrelations(db, name)
-                if (relations):
-                    continue
+#                if (relations):
+#                    continue
 
                 try:
                     # new page, fetch info and add to the db
