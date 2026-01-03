@@ -31,12 +31,13 @@ sparkline()
 {
     datafile=$1
     column=$2
-    simg=`gnuplot -e "filename='$datafile'; column=$column" sparkline.gp  | base64 -w 0`
+    numpoints=$3
+    simg=`gnuplot -e "filename='$datafile'; column=$column; numpoints=$3" sparkline.gp  | base64 -w 0`
     lastd=`awk -F, 'END {print $'$column'}' $datafile`
     echo '<img src="data:image/png;base64,'$simg'" alt="sparkline of '$datafile' column '$column'"/> '$lastd
 }
 
-sparkline_users=`gnuplot -e "filename='tot-$rpttype-daily.csv'; column=2" sparkline.gp  | base64 -w 0`
+#sparkline_users=`gnuplot -e "filename='tot-$rpttype-daily.csv'; column=2" sparkline.gp  | base64 -w 0`
 
 
 cat <<EOF1
@@ -70,10 +71,10 @@ Here is overall activity, up to $endthismonth
 
 | metric | monthly | daily |
 | ------ | ------- | ----- |
-| active users | `sparkline tot-monthly.csv 2` | `sparkline tot-thismonth-daily.csv 2`
-| active pages | `sparkline tot-monthly.csv 3` | `sparkline tot-thismonth-daily.csv 3`
-| page edits | `sparkline tot-monthly.csv 4` | `sparkline tot-thismonth-daily.csv 4`
-| new pages | `sparkline tot-monthly.csv 5` | `sparkline tot-thismonth-daily.csv 5`
+| active users | `sparkline tot-monthly.csv 2 12` | `sparkline tot-thismonth-daily.csv 2 30`
+| active pages | `sparkline tot-monthly.csv 3 12` | `sparkline tot-thismonth-daily.csv 3 30`
+| page edits | `sparkline tot-monthly.csv 4 12` | `sparkline tot-thismonth-daily.csv 4 30`
+| new pages | `sparkline tot-monthly.csv 5 12` | `sparkline tot-thismonth-daily.csv 5 30`
 
 
 EOF2

@@ -17,6 +17,8 @@ set bmargin 0.5
 
 set style line 1 lc rgb '#007700' lw 2  # Line style for the plot
 
-plot filename using column with lines linestyle 1
+stats filename skip 1 nooutput
+
+plot filename using column skip 1 every ::(STATS_records>numpoints ? STATS_records-numpoints : 0) with lines linestyle 1
 
 set output   # close output
